@@ -4,15 +4,42 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
+    meta: {
+      requiresAuth: true,
+    },
     children: [
-      { path: "", component: () => import("pages/IndexPage.vue") },
-      { path: "/login", component: () => import("pages/LoginPage.vue") },
-      { path: "/register", component: () => import("pages/RegisterPage.vue") },
+      {
+        path: "",
+        component: () => import("pages/HomePage.vue"),
+      },
+      {
+        path: "registrar-conductor",
+        component: () => import("pages/RegistrarConductor.vue"),
+      },
+      {
+        path: "registrar-vehiculo",
+        component: () => import("pages/RegistrarVehiculo.vue"),
+      },
+      {
+        path: "registrar-personal",
+        component: () => import("pages/RegistrarPersonal.vue"),
+      },
     ],
   },
-
-  // Always leave this as last one,
-  // but you can also remove it
+  {
+    path: "/auth",
+    component: () => import("layouts/AuthLayout.vue"),
+    children: [
+      {
+        path: "login",
+        component: () => import("pages/LoginPage.vue"),
+      },
+      {
+        path: "register",
+        component: () => import("pages/RegisterPage.vue"),
+      },
+    ],
+  },
   {
     path: "/:catchAll(.*)*",
     component: () => import("pages/ErrorNotFound.vue"),
