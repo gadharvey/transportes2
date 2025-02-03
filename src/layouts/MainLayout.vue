@@ -10,12 +10,30 @@ const { user } = storeToRefs(authStore);
 
 const linksList = [
   {
+    title: "Procesos",
+    icon: "folder_open",
+    children: [
+      { title: "Mi perfil", url: "/" },
+      { title: "Datos empresa", url: "/" },
+    ],
+  },
+
+  {
     title: "Registros",
     icon: "add",
     children: [
       { title: "Registrar conductores", url: "/registrar-conductor" },
       { title: "Registrar vehículos", url: "/registrar-vehiculo" },
       { title: "Registrar personal", url: "/registrar-personal" },
+      { title: "Registrar ruta", url: "/registrar-ruta" },
+    ],
+  },
+  {
+    title: "Administrar",
+    icon: "manage_accounts",
+    children: [
+      { title: "Crear Terminales", url: "/crear-terminal" },
+      { title: "Crear Viaje", url: "/crear-viaje" },
     ],
   },
   {

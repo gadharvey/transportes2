@@ -24,6 +24,18 @@ const routes: RouteRecordRaw[] = [
         path: "registrar-personal",
         component: () => import("pages/RegistrarPersonal.vue"),
       },
+      {
+        path: "registrar-ruta",
+        component: () => import("pages/RegistrarRuta.vue"),
+      },
+      {
+        path: "crear-terminal",
+        component: () => import("pages/CrearTerminal.vue"),
+      },
+      {
+        path: "crear-viaje",
+        component: () => import("pages/CrearViaje.vue"),
+      },
     ],
   },
   {
