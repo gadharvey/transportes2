@@ -13,7 +13,7 @@ const linksList = [
     title: "Procesos",
     icon: "folder_open",
     children: [
-      { title: "Mi perfil", url: "/" },
+      { title: "Hora Salida", url: "/registrar-pasaje" },
       { title: "Datos empresa", url: "/" },
     ],
   },
@@ -77,7 +77,13 @@ function logout() {
     <!-- Drawer lateral -->
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label header> El apurimeño </q-item-label>
+        <q-item-label header>
+  <img
+    src="transporte.png"
+    alt="Logo"
+    style="display: block; margin: auto; width: 100%; max-width: 100px; height: auto;"
+  />
+</q-item-label>
 
         <q-item clickable tag="a" @click="router.push('/')">
           <q-item-section avatar>

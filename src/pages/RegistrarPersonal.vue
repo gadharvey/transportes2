@@ -112,6 +112,12 @@ onMounted(cargarPersonal);
       bordered
       :rows="personalList"
       :columns="[
+        {
+          name: 'acciones',
+          label: 'Acciones',
+          field: 'acciones',
+          align: 'center',
+        },
         { name: 'nombres', label: 'Nombres', field: 'nombres', align: 'left' },
         {
           name: 'apellidos',
@@ -127,12 +133,6 @@ onMounted(cargarPersonal);
           align: 'left',
         },
         { name: 'email', label: 'Email', field: 'email', align: 'left' },
-        {
-          name: 'acciones',
-          label: 'Acciones',
-          field: 'acciones',
-          align: 'left',
-        },
       ]"
       row-key="id"
     >

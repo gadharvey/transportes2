@@ -118,6 +118,7 @@ onUnmounted(() => {
       bordered
       :rows="conductoresList"
       :columns="[
+        { name: 'acciones', label: 'Acciones', field: 'Acciones', align: 'center' },
         { name: 'nombres', label: 'Nombres', field: 'nombres', align: 'left' },
         { name: 'apellidos', label: 'Apellidos', field: 'apellidos', align: 'left' },
         { name: 'tipo_documento', label: 'Tipo Documento', field: 'tipo_documento', align: 'left' },
@@ -129,7 +130,6 @@ onUnmounted(() => {
         { name: 'direccion_domicilio', label: 'Dirección', field: 'direccion_domicilio', align: 'left' },
         { name: 'licencia', label: 'Licencia', field: 'licencia', align: 'left' },
         // { name: 'acciones', label: 'Acciones', align: 'center' }
-        { name: 'acciones', label: 'Acciones', field: 'Acciones', align: 'center' },
       ]"
       row-key="id"
     >

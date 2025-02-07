@@ -36,6 +36,10 @@ const routes: RouteRecordRaw[] = [
         path: "crear-viaje",
         component: () => import("pages/CrearViaje.vue"),
       },
+      {
+        path: "registrar-pasaje",
+        component: () => import("pages/HoraSalida.vue"),
+      },
     ],
   },
   {

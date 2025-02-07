@@ -132,6 +132,7 @@ onUnmounted(() => {
       bordered
       :rows="vehiculosList"
       :columns="[
+        { name: 'acciones', label: 'Acciones', field: 'acciones', align: 'center' },
         { name: 'placa', label: 'Placa', field: 'placa', align: 'left' },
         { name: 'marca', label: 'Marca', field: 'marca', align: 'left' },
         { name: 'modelo', label: 'Modelo', field: 'modelo', align: 'left' },
@@ -140,7 +141,6 @@ onUnmounted(() => {
         { name: 'tipo', label: 'Tipo', field: 'tipo', align: 'left' },
         { name: 'capacidad', label: 'Capacidad', field: 'capacidad', align: 'left' },
         // { name: 'acciones', label: 'Acciones', align: 'center' }
-        { name: 'acciones', label: 'Acciones', field: 'acciones', align: 'center' },
       ]"
       row-key="id"
     >

@@ -86,10 +86,10 @@ onUnmounted(() => {
       bordered
       :rows="terminalList"
       :columns="[
+        { name: 'acciones', label: 'Acciones', field: 'Acciones', align: 'center' },
         { name: 'Ciudad', label: 'Ciudad', field: 'Ciudad', align: 'left' },
         { name: 'Fecha_creacion', label: 'Fecha de Creación', field: 'Fecha_creacion', align: 'left' },
         // { name: 'acciones', label: 'Acciones', align: 'center' }
-        { name: 'acciones', label: 'Acciones', field: 'Acciones', align: 'center' },
       ]"
       row-key="id"
     >
