@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from "src/stores/auth.store";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 
@@ -8,7 +8,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
 
-const linksList = [
+const fullLinksList = [
   {
     title: "Procesos",
     icon: "folder_open",
@@ -17,7 +17,6 @@ const linksList = [
       { title: "Datos empresa", url: "/" },
     ],
   },
-
   {
     title: "Registros",
     icon: "add",
@@ -45,6 +44,15 @@ const linksList = [
     ],
   },
 ];
+
+const filteredLinksList = computed(() => {
+  if (user.value?.role === "gerente") {
+    return fullLinksList.filter((link) => link.title === "Procesos");
+  } else if (user.value?.role === "admin") {
+    return fullLinksList;
+  }
+  return [];
+});
 
 const leftDrawerOpen = ref(false);
 const confirmLogout = ref(false);
@@ -78,12 +86,18 @@ function logout() {
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
         <q-item-label header>
-  <img
-    src="transporte.png"
-    alt="Logo"
-    style="display: block; margin: auto; width: 100%; max-width: 100px; height: auto;"
-  />
-</q-item-label>
+          <img
+            src="transporte.png"
+            alt="Logo"
+            style="
+              display: block;
+              margin: auto;
+              width: 100%;
+              max-width: 100px;
+              height: auto;
+            "
+          />
+        </q-item-label>
 
         <q-item clickable tag="a" @click="router.push('/')">
           <q-item-section avatar>
@@ -95,7 +109,7 @@ function logout() {
         </q-item>
 
         <q-expansion-item
-          v-for="(link, index) in linksList"
+          v-for="(link, index) in filteredLinksList"
           :key="index"
           :icon="link.icon"
           :label="link.title"
@@ -115,7 +129,6 @@ function logout() {
         </q-expansion-item>
       </q-list>
 
-      <!-- 🔥 Card de usuario en el pie del drawer -->
       <div class="user-card">
         <q-card flat bordered>
           <q-item clickable v-ripple>
@@ -157,7 +170,6 @@ function logout() {
       <router-view />
     </q-page-container>
 
-    <!-- 🔴 Dialog de confirmación de cierre de sesión -->
     <q-dialog v-model="confirmLogout">
       <q-card>
         <q-card-section class="row items-center">

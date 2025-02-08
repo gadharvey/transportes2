@@ -10,7 +10,7 @@ import { authGuard } from "src/guards/authGuard";
 export default defineRouter(function () {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : createWebHistory; // 🔥 Cambiado aquí
+    : createWebHistory;
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
