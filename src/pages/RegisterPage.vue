@@ -2,8 +2,9 @@
 import { ref } from "vue";
 import { useQuasar } from "quasar";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "src/boot/firebase";
+import { auth, db } from "src/boot/firebase";
 import { RouterLink } from "vue-router";
+import { doc, setDoc } from "firebase/firestore";
 
 const $q = useQuasar();
 
@@ -20,6 +21,12 @@ const onSubmit = async () => {
         email.value,
         password.value,
       );
+
+      const userReference = doc(db, "users", newUSer.user.uid);
+      await setDoc(userReference, {
+        role: "administrador",
+        email: email.value,
+      });
 
       $q.notify({
         type: "positive",

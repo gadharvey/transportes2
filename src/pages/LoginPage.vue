@@ -2,9 +2,10 @@
 import { ref } from "vue";
 import { useQuasar } from "quasar";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "src/boot/firebase";
+import { auth, db } from "src/boot/firebase";
 import { RouterLink, useRouter } from "vue-router";
 import { useAuthStore } from "src/stores/auth.store";
+import { doc, getDoc } from "firebase/firestore";
 
 const router = useRouter();
 
@@ -26,6 +27,14 @@ const onSubmit = async () => {
         password.value,
       );
 
+      const docRef = doc(db, `users/${userCredential.user.uid}`);
+      const userDoc = await getDoc(docRef);
+
+      const data = userDoc.data() as {
+        role: string;
+        createdAt: string;
+      };
+
       $q.notify({
         type: "positive",
         message: `¡Inicio de sesión exitoso! Bienvenido ${userCredential.user.email}`,
@@ -36,7 +45,7 @@ const onSubmit = async () => {
         id: userCredential.user.uid,
         name: userCredential.user.displayName,
         photoUrl: userCredential.user.photoURL,
-        role: "admin",
+        role: data.role,
       });
 
       await router.push("/");

@@ -8,16 +8,24 @@ export function authGuard(
 ) {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
+  const userRole = authStore.user?.role || "no rol mono travieso";
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     if (to.path !== "/auth/login") {
-      next("/auth/login"); // Redirigir solo si NO está en /login
+      next("/auth/login");
     } else {
-      next(); // Permitir el acceso a /login para evitar bucle
+      next();
     }
   } else if (isAuthenticated && to.path === "/auth/login") {
-    next("/"); // Si está autenticado y va a /login, enviarlo al inicio
+    next("/");
+  } else if (to.meta.roles) {
+    const allowedRoles = to.meta.roles as string[];
+    if (allowedRoles.includes(userRole)) {
+      next();
+    } else {
+      next("/");
+    }
   } else {
-    next(); // Continuar con la navegación normal
+    next();
   }
 }

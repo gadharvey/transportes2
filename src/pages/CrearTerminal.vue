@@ -31,7 +31,6 @@ const registrarTerminal = async () => {
     await addDoc(collection(db, "terminal"), terminal);
     $q.notify({ type: "positive", message: "Terminal registrado con éxito" });
 
-    // Limpiar formulario
     Object.assign(terminal, {
       Ciudad: "",
       Fecha_creacion: "",
@@ -55,7 +54,10 @@ const escucharTerminales = () => {
 const eliminarTerminal = async (id: string) => {
   try {
     await deleteDoc(doc(db, "terminal", id));
-    $q.notify({ type: "positive", message: "Terminal eliminada correctamente" });
+    $q.notify({
+      type: "positive",
+      message: "Terminal eliminada correctamente",
+    });
   } catch (error) {
     $q.notify({ type: "negative", message: "Error al eliminar terminal" });
   }
@@ -63,7 +65,7 @@ const eliminarTerminal = async (id: string) => {
 
 onMounted(escucharTerminales);
 onUnmounted(() => {
-  if (unsubscribe) unsubscribe(); // Detener la escucha cuando el componente se destruye
+  if (unsubscribe) unsubscribe();
 });
 </script>
 
@@ -73,8 +75,18 @@ onUnmounted(() => {
       <q-card-section>
         <q-form @submit="registrarTerminal">
           <q-input v-model="terminal.Ciudad" label="Ciudad" required />
-          <q-input v-model="terminal.Fecha_creacion" type="date" label="Fecha de Creación" required />
-          <q-btn type="submit" label="Registrar Terminal" color="primary" class="q-mt-md" />
+          <q-input
+            v-model="terminal.Fecha_creacion"
+            type="date"
+            label="Fecha de Creación"
+            required
+          />
+          <q-btn
+            type="submit"
+            label="Registrar Terminal"
+            color="primary"
+            class="q-mt-md"
+          />
         </q-form>
       </q-card-section>
     </q-card>
@@ -86,16 +98,32 @@ onUnmounted(() => {
       bordered
       :rows="terminalList"
       :columns="[
-        { name: 'acciones', label: 'Acciones', field: 'Acciones', align: 'center' },
+        {
+          name: 'acciones',
+          label: 'Acciones',
+          field: 'Acciones',
+          align: 'center',
+        },
         { name: 'Ciudad', label: 'Ciudad', field: 'Ciudad', align: 'left' },
-        { name: 'Fecha_creacion', label: 'Fecha de Creación', field: 'Fecha_creacion', align: 'left' },
+        {
+          name: 'Fecha_creacion',
+          label: 'Fecha de Creación',
+          field: 'Fecha_creacion',
+          align: 'left',
+        },
         // { name: 'acciones', label: 'Acciones', align: 'center' }
       ]"
       row-key="id"
     >
       <template v-slot:body-cell-acciones="{ row }">
         <q-td align="center">
-          <q-btn color="red" icon="delete" dense flat @click="eliminarTerminal(row.id)" />
+          <q-btn
+            color="red"
+            icon="delete"
+            dense
+            flat
+            @click="eliminarTerminal(row.id)"
+          />
         </q-td>
       </template>
     </q-table>

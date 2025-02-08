@@ -36,10 +36,8 @@ const registrarPersonal = async () => {
     const docRef = await addDoc(collection(db, "personal"), personal);
     personalList.value.push({ id: docRef.id, ...personal });
 
-    // Notificación de éxito
     $q.notify({ type: "positive", message: "Personal registrado con éxito" });
 
-    // Limpiar formulario
     Object.assign(personal, {
       nombres: "",
       apellidos: "",
@@ -105,7 +103,6 @@ onMounted(cargarPersonal);
       </q-card-section>
     </q-card>
 
-    <!-- Tabla de Personal Registrado -->
     <q-table
       class="q-mt-lg"
       flat
