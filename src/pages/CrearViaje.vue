@@ -1,68 +1,153 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted, onUnmounted } from "vue";
+import { collection, addDoc, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import { useQuasar } from "quasar";
-import { collection, getDocs, addDoc } from "firebase/firestore";
 import { db } from "src/boot/firebase";
+
+interface Viaje {
+  id?: string;
+  fecha: string;
+  hora: string;
+  ruta: string;
+  vehiculo: string;
+  conductor: string;
+  precio: number;
+  capacidad?: number;
+}
+
+interface Ruta {
+  id: string;
+  origen: string;
+  destino: string;
+}
+
+interface Vehiculo {
+  id: string;
+  marca: string;
+  capacidad: number;
+}
+
+interface Conductor {
+  id: string;
+  nombres: string;
+}
 
 const $q = useQuasar();
 
-const viaje = ref({
-  fechaHora: "",
-  precio: "",
-  rutaId: "",
-  vehiculoId: "",
-  conductorId: "",
+const viaje = reactive<Viaje>({
+  fecha: "",
+  hora: "",
+  ruta: "",
+  vehiculo: "",
+  conductor: "",
+  precio: 0,
 });
 
-const rutas = ref<{ label: string; value: string }[]>([]);
-const vehiculos = ref<{ label: string; value: string }[]>([]);
-const conductores = ref<{ label: string; value: string }[]>([]);
+const rutaList = ref<Ruta[]>([]);
+const vehiculoList = ref<Vehiculo[]>([]);
+const conductorList = ref<Conductor[]>([]);
+const viajeList = ref<Viaje[]>([]);
+let unsubscribeViajes: () => void | null = null;
 
-const cargarDatos = async () => {
-  try {
-    const rutasSnapshot = await getDocs(collection(db, "ruta"));
-    rutas.value = rutasSnapshot.docs.map(doc => ({
-      label: doc.data().nombre || "Desconocido",
-      value: doc.id,
-    }));
-    console.log("Rutas cargadas:", rutas.value); // Debug log
-
-    const vehiculosSnapshot = await getDocs(collection(db, "vehiculo"));
-    vehiculos.value = vehiculosSnapshot.docs.map(doc => ({
-      label: doc.data().nombre || "Desconocido",
-      value: doc.id,
-    }));
-    console.log("Vehículos cargados:", vehiculos.value); // Debug log
-
-    const conductoresSnapshot = await getDocs(collection(db, "conductor"));
-    conductores.value = conductoresSnapshot.docs.map(doc => ({
-      label: doc.data().nombre || "Desconocido",
-      value: doc.id,
-    }));
-    console.log("Conductores cargados:", conductores.value); // Debug log
-  } catch (error) {
-    $q.notify({ type: "negative", message: "Error al cargar datos" });
+const registrarViaje = async (event: Event) => {
+  event.preventDefault();
+  if (!viaje.fecha || !viaje.hora || !viaje.ruta || !viaje.vehiculo || !viaje.conductor || viaje.precio <= 0) {
+    $q.notify({ type: "warning", message: "Completa todos los campos correctamente" });
+    return;
   }
-};
 
-const registrarViaje = async () => {
   try {
-    await addDoc(collection(db, "viaje"), viaje.value);
-    $q.notify({ type: "positive", message: "Viaje registrado" });
-    Object.assign(viaje.value, {
-      fechaHora: "",
-      precio: "",
-      rutaId: "",
-      vehiculoId: "",
-      conductorId: "",
-    });
+    const vehiculoSeleccionado = vehiculoList.value.find(v => v.id === viaje.vehiculo);
+    await addDoc(collection(db, "viajes"), { ...viaje, capacidad: vehiculoSeleccionado?.capacidad });
+    $q.notify({ type: "positive", message: "Viaje registrado con éxito" });
+    limpiarFormulario();
   } catch (error) {
     $q.notify({ type: "negative", message: "Error al registrar viaje" });
   }
 };
 
+const limpiarFormulario = () => {
+  viaje.fecha = "";
+  viaje.hora = "";
+  viaje.ruta = "";
+  viaje.vehiculo = "";
+  viaje.conductor = "";
+  viaje.precio = 0;
+};
+
+const cargarRutas = () => {
+  const q = collection(db, "ruta");
+  onSnapshot(q, (snapshot) => {
+    rutaList.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Ruta[];
+  });
+};
+
+const cargarVehiculos = () => {
+  const q = collection(db, "vehiculos");
+  onSnapshot(q, (snapshot) => {
+    vehiculoList.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Vehiculo[];
+  });
+};
+
+const cargarConductores = () => {
+  const q = collection(db, "conductores");
+  onSnapshot(q, (snapshot) => {
+    conductorList.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Conductor[];
+  });
+};
+
+const escucharViajes = () => {
+  const q = collection(db, "viajes");
+  unsubscribeViajes = onSnapshot(q, (snapshot) => {
+    viajeList.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Viaje[];
+  });
+};
+
+const getRutaNombre = (id: string) => {
+  const ruta = rutaList.value.find(r => r.id === id);
+  return ruta ? `${ruta.origen} - ${ruta.destino}` : "Ruta no encontrada";
+};
+
+const getVehiculoNombre = (id: string) => {
+  const vehiculo = vehiculoList.value.find(v => v.id === id);
+  return vehiculo ? vehiculo.marca : "Vehículo no encontrado";
+};
+
+const getConductorNombre = (id: string) => {
+  const conductor = conductorList.value.find(c => c.id === id);
+  return conductor ? conductor.nombres : "Conductor no encontrado";
+};
+
+const eliminarViaje = async (id: string) => {
+  try {
+    await deleteDoc(doc(db, "viajes", id));
+    $q.notify({ type: "positive", message: "Viaje eliminado con éxito" });
+  } catch (error) {
+    $q.notify({ type: "negative", message: "Error al eliminar el viaje" });
+  }
+};
+
 onMounted(() => {
-  cargarDatos();
+  cargarRutas();
+  cargarVehiculos();
+  cargarConductores();
+  escucharViajes();
+});
+
+onUnmounted(() => {
+  if (unsubscribeViajes) unsubscribeViajes();
 });
 </script>
 
@@ -70,15 +155,72 @@ onMounted(() => {
   <q-page padding>
     <q-card>
       <q-card-section>
-        <q-form @submit.prevent="registrarViaje">
-          <q-input v-model="viaje.fechaHora" label="Fecha y Hora" type="datetime-local" required />
-          <q-input v-model="viaje.precio" label="Precio" type="number" required />
-          <q-select v-model="viaje.rutaId" :options="rutas" label="Seleccionar Ruta" required />
-          <q-select v-model="viaje.vehiculoId" :options="vehiculos" label="Seleccionar Vehículo" required />
-          <q-select v-model="viaje.conductorId" :options="conductores" label="Seleccionar Conductor" required />
-          <q-btn type="submit" label="Registrar" color="primary" class="q-mt-md" />
+        <q-form @submit="registrarViaje">
+          <q-input v-model="viaje.fecha" label="Fecha del Viaje" type="date" required />
+          <q-input v-model="viaje.hora" label="Hora del Viaje" type="time" required />
+          <q-select
+            v-model="viaje.ruta"
+            :options="rutaList.map(ruta => ({ label: `${ruta.origen} - ${ruta.destino}`, value: ruta.id }))"
+            label="Ruta"
+            emit-value
+            map-options
+            required
+          />
+          <q-select
+            v-model="viaje.vehiculo"
+            :options="vehiculoList.map(vehiculo => ({ label: vehiculo.marca, value: vehiculo.id }))"
+            label="Vehículo"
+            emit-value
+            map-options
+            required
+          />
+          <q-select
+            v-model="viaje.conductor"
+            :options="conductorList.map(conductor => ({ label: conductor.nombres, value: conductor.id }))"
+            label="Conductor"
+            emit-value
+            map-options
+            required
+          />
+          <q-input v-model="viaje.precio" label="Precio del Viaje" type="number" min="0" required />
+          <q-btn type="submit" label="Registrar Viaje" color="primary" class="q-mt-md" />
         </q-form>
       </q-card-section>
     </q-card>
+
+    <!-- Tabla de Viajes Registrados -->
+    <q-table
+      class="q-mt-lg"
+      flat
+      bordered
+      :rows="viajeList"
+      :columns="[
+        { name: 'acciones', label: 'Acciones', field: 'acciones', align: 'center' },
+        { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'center' },
+        { name: 'hora', label: 'Hora', field: 'hora', align: 'center' },
+        { name: 'precio', label: 'Precio', field: 'precio', align: 'center' },
+        { name: 'ruta', label: 'Ruta', field: row => getRutaNombre(row.ruta), align: 'center' },
+        { name: 'vehiculo', label: 'Vehículo', field: row => getVehiculoNombre(row.vehiculo), align: 'center' },
+        { name: 'conductor', label: 'Conductor', field: row => getConductorNombre(row.conductor), align: 'center' },
+        { name: 'capacidad', label: 'Capacidad', field: 'capacidad', align: 'center' },
+      ]"
+      row-key="id"
+    >
+      <!-- <template v-slot:body-cell-acciones="props">
+        <q-btn
+          icon="delete"
+          color="red"
+          flat
+          round
+          @click="eliminarViaje(props.row.id)"
+          label="Eliminar"
+        />
+      </template> -->
+      <template v-slot:body-cell-acciones="{ row }">
+        <q-td align="center">
+          <q-btn color="red" icon="delete" dense flat @click="eliminarViaje(row.id)" />
+        </q-td>
+      </template>
+    </q-table>
   </q-page>
 </template>
