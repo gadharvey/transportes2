@@ -24,7 +24,7 @@ const onSubmit = async () => {
 
       const userReference = doc(db, "users", newUSer.user.uid);
       await setDoc(userReference, {
-        role: "administrador",
+        role: "admin",
         email: email.value,
       });
 

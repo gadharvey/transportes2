@@ -23,9 +23,14 @@ const calcularIngresoTotal = async () => {
   ingresoTotal.value = pasajesSnapshot.docs.reduce((total, doc) => {
     const data = doc.data();
     const precio = parseFloat(data.precio) || 0;
-    return total + precio;
+    const estado = data.estadoPasaje;
+    if (estado === "Pagado" || estado === "Yape") {
+      return total + precio;
+    }
+    return total;
   }, 0);
 };
+
 
 const cargarCantidadEmpleados = async () => {
   const empleadosSnapshot = await getDocs(collection(db, "personal"));

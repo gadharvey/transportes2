@@ -47,7 +47,7 @@ const fullLinksList = [
 
 const filteredLinksList = computed(() => {
   if (user.value?.role === "gerente") {
-    return fullLinksList.filter((link) => link.title === "Procesos");
+    return fullLinksList.filter((link) => link.title === "Procesos" );
   } else if (user.value?.role === "admin") {
     return fullLinksList;
   }

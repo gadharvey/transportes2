@@ -4,12 +4,19 @@ import { collection, addDoc, onSnapshot, deleteDoc, doc } from "firebase/firesto
 import { useQuasar } from "quasar";
 import { db } from "src/boot/firebase";
 
+interface Punto {
+  nombre: string;
+  precio: number;
+}
+
 interface Ruta {
   id?: string;
   origen: string;
   destino: string;
   tiempo: string;
   distancia: string;
+  precio: number;  // Precio del viaje de Origen a Destino
+  puntos: Punto[]; // Lista de puntos intermedios con precios
 }
 
 const $q = useQuasar();
@@ -19,11 +26,18 @@ const ruta = reactive<Ruta>({
   destino: "",
   tiempo: "",
   distancia: "",
+  precio: 0,
+  puntos: [],
+});
+
+const nuevoPunto = reactive<Punto>({
+  nombre: "",
+  precio: 0,
 });
 
 const rutaList = ref<Ruta[]>([]);
 const terminalList = ref<string[]>([]);
-let unsubscribe: () => void | null = null;
+let unsubscribe: (() => void) | null = null;
 
 const registrarRuta = async (event: Event) => {
   event.preventDefault();
@@ -46,6 +60,10 @@ const limpiarFormulario = () => {
   ruta.destino = "";
   ruta.tiempo = "";
   ruta.distancia = "";
+  ruta.precio = 0;
+  ruta.puntos = [];
+  nuevoPunto.nombre = "";
+  nuevoPunto.precio = 0;
 };
 
 const escucharRutas = () => {
@@ -74,6 +92,22 @@ const eliminarRuta = async (id: string) => {
   } catch (error) {
     $q.notify({ type: "negative", message: "Error al eliminar la ruta" });
   }
+};
+
+const agregarPunto = () => {
+  if (!nuevoPunto.nombre || nuevoPunto.precio <= 0) {
+    $q.notify({ type: "warning", message: "Ingrese un punto válido con precio mayor a 0" });
+    return;
+  }
+
+  ruta.puntos.push({ ...nuevoPunto });
+  nuevoPunto.nombre = "";
+  nuevoPunto.precio = 0;
+};
+
+const eliminarPunto = (index: number) => {
+  ruta.puntos.splice(index, 1);
+  $q.notify({ type: "info", message: "Punto intermedio eliminado" });
 };
 
 onMounted(() => {
@@ -109,38 +143,44 @@ onUnmounted(() => {
           />
           <q-input v-model="ruta.tiempo" label="Tiempo (minutos)" type="number" required />
           <q-input v-model="ruta.distancia" label="Distancia (km)" type="number" required />
+          <q-input v-model="ruta.precio" label="Precio (S/.) del viaje" type="number" required />
+
+          <q-card-section class="q-mt-lg">
+            <h6>Puntos Intermedios</h6>
+            <div class="q-gutter-md row items-center">
+              <q-input v-model="nuevoPunto.nombre" label="Nombre del Punto" />
+              <q-input v-model.number="nuevoPunto.precio" label="Precio (S/.)" type="number" />
+              <q-btn label="Agregar Punto" @click="agregarPunto" color="primary" />
+            </div>
+            <ul v-if="ruta.puntos.length">
+              <li v-for="(punto, index) in ruta.puntos" :key="index">
+                {{ punto.nombre }} - S/. {{ punto.precio.toFixed(2) }}
+                <q-btn dense flat icon="delete" color="red" @click="eliminarPunto(index)" />
+              </li>
+            </ul>
+          </q-card-section>
+
           <q-btn type="submit" label="Registrar Ruta" color="primary" class="q-mt-md" />
         </q-form>
       </q-card-section>
     </q-card>
 
-    <!-- Tabla de Rutas Registradas -->
+    
     <q-table
       class="q-mt-lg"
       flat
       bordered
       :rows="rutaList"
       :columns="[ 
-        { name: 'acciones', label: 'Acciones', align: 'center' },
+        { name: 'acciones', label: 'Acciones', field: 'acciones', align: 'center' },
         { name: 'origen', label: 'Origen', field: 'origen', align: 'center' },
         { name: 'destino', label: 'Destino', field: 'destino', align: 'center' },
         { name: 'tiempo', label: 'Tiempo (min)', field: 'tiempo', align: 'center' },
         { name: 'distancia', label: 'Distancia (km)', field: 'distancia', align: 'center' },
+        { name: 'precio', label: 'Precio (S/.)', field: 'precio', align: 'center' }
       ]"
       row-key="id"
     >
-      <!-- <template v-slot:body-cell-acciones="props">
-        <q-td align="center">
-          <q-btn
-            flat
-            dense
-            round
-            icon="delete"
-            color="red"
-            @click="eliminarRuta(props.row.id)"
-          />
-        </q-td>
-      </template> -->
       <template v-slot:body-cell-acciones="{ row }">
         <q-td align="center">
           <q-btn color="red" icon="delete" dense flat @click="eliminarRuta(row.id)" />

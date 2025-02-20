@@ -11,7 +11,6 @@ interface Viaje {
   ruta: string;
   vehiculo: string;
   conductor: string;
-  precio: number;
   capacidad?: number;
 }
 
@@ -19,6 +18,7 @@ interface Ruta {
   id: string;
   origen: string;
   destino: string;
+  precio: number;
 }
 
 interface Vehiculo {
@@ -40,25 +40,37 @@ const viaje = reactive<Viaje>({
   ruta: "",
   vehiculo: "",
   conductor: "",
-  precio: 0,
 });
 
 const rutaList = ref<Ruta[]>([]);
 const vehiculoList = ref<Vehiculo[]>([]);
 const conductorList = ref<Conductor[]>([]);
 const viajeList = ref<Viaje[]>([]);
-let unsubscribeViajes: () => void | null = null;
+let unsubscribeViajes: (() => void) | null = null;
+
 
 const registrarViaje = async (event: Event) => {
   event.preventDefault();
-  if (!viaje.fecha || !viaje.hora || !viaje.ruta || !viaje.vehiculo || !viaje.conductor || viaje.precio <= 0) {
+  if (!viaje.fecha || !viaje.hora || !viaje.ruta || !viaje.vehiculo || !viaje.conductor) {
     $q.notify({ type: "warning", message: "Completa todos los campos correctamente" });
     return;
   }
 
   try {
     const vehiculoSeleccionado = vehiculoList.value.find(v => v.id === viaje.vehiculo);
-    await addDoc(collection(db, "viajes"), { ...viaje, capacidad: vehiculoSeleccionado?.capacidad });
+    const rutaSeleccionada = rutaList.value.find(r => r.id === viaje.ruta);
+
+    if (!rutaSeleccionada) {
+      $q.notify({ type: "warning", message: "Ruta seleccionada no encontrada" });
+      return;
+    }
+
+    await addDoc(collection(db, "viajes"), {
+      ...viaje,
+      capacidad: vehiculoSeleccionado?.capacidad,
+      precioRuta: rutaSeleccionada.precio  // Agregamos el precio de la ruta
+    });
+
     $q.notify({ type: "positive", message: "Viaje registrado con éxito" });
     limpiarFormulario();
   } catch (error) {
@@ -66,13 +78,13 @@ const registrarViaje = async (event: Event) => {
   }
 };
 
+
 const limpiarFormulario = () => {
   viaje.fecha = "";
   viaje.hora = "";
   viaje.ruta = "";
   viaje.vehiculo = "";
   viaje.conductor = "";
-  viaje.precio = 0;
 };
 
 const cargarRutas = () => {
@@ -118,6 +130,11 @@ const escucharViajes = () => {
 const getRutaNombre = (id: string) => {
   const ruta = rutaList.value.find(r => r.id === id);
   return ruta ? `${ruta.origen} - ${ruta.destino}` : "Ruta no encontrada";
+};
+
+const getRutaPrecio = (id: string) => {
+  const ruta = rutaList.value.find(r => r.id === id);
+  return ruta ? ruta.precio : 0;
 };
 
 const getVehiculoNombre = (id: string) => {
@@ -182,7 +199,6 @@ onUnmounted(() => {
             map-options
             required
           />
-          <q-input v-model="viaje.precio" label="Precio del Viaje" type="number" min="0" required />
           <q-btn type="submit" label="Registrar Viaje" color="primary" class="q-mt-md" />
         </q-form>
       </q-card-section>
@@ -194,28 +210,18 @@ onUnmounted(() => {
       flat
       bordered
       :rows="viajeList"
-      :columns="[
+      :columns="[ 
         { name: 'acciones', label: 'Acciones', field: 'acciones', align: 'center' },
         { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'center' },
         { name: 'hora', label: 'Hora', field: 'hora', align: 'center' },
-        { name: 'precio', label: 'Precio', field: 'precio', align: 'center' },
         { name: 'ruta', label: 'Ruta', field: row => getRutaNombre(row.ruta), align: 'center' },
+        { name: 'precioRuta', label: 'Precio de la Ruta', field: row => getRutaPrecio(row.ruta), align: 'center' },
         { name: 'vehiculo', label: 'Vehículo', field: row => getVehiculoNombre(row.vehiculo), align: 'center' },
         { name: 'conductor', label: 'Conductor', field: row => getConductorNombre(row.conductor), align: 'center' },
         { name: 'capacidad', label: 'Capacidad', field: 'capacidad', align: 'center' },
       ]"
       row-key="id"
     >
-      <!-- <template v-slot:body-cell-acciones="props">
-        <q-btn
-          icon="delete"
-          color="red"
-          flat
-          round
-          @click="eliminarViaje(props.row.id)"
-          label="Eliminar"
-        />
-      </template> -->
       <template v-slot:body-cell-acciones="{ row }">
         <q-td align="center">
           <q-btn color="red" icon="delete" dense flat @click="eliminarViaje(row.id)" />
