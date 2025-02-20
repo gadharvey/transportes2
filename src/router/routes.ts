@@ -41,7 +41,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "crear-viaje",
         component: () => import("pages/CrearViaje.vue"),
-        meta: { roles: ["admin"] },
+        meta: { roles: ["admin", "gerente"] },
       },
       {
         path: "registrar-pasaje",
